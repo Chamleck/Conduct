@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["cypress", "node"],   // Connecting types for Cypress and Node.js
+    "noEmit": true
+  },
+  "include": ["tests/**/*.ts"]      // Configuring the path to the tests
+}

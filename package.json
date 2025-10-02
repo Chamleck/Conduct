@@ -14,7 +14,8 @@
     "initialize:fresh": "npm run initialize:revert && npm run initialize",
     "postinstall": "npm run initialize && prisma generate && prisma db push",
     "test:initialize:database": "cp -n prisma/base.sqlite prisma/test.sqlite || :",
-    "test:run": "npm run test:initialize:database && echo 'Add your end-to-end test run command here'"
+    "test:run": "npm run test:initialize:database && cypress run --config-file cypress.config.ts && ts-node scripts/generateReport.ts",
+    "test:open": "cypress open --config-file cypress.config.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
@@ -39,22 +40,30 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/chai": "^5.2.2",
+    "@types/cypress": "^0.1.6",
     "@types/eslint": "^8.56.11",
     "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "^18.19.45",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^18.19.129",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.2.19",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "6.0.0",
     "@typescript-eslint/parser": "6.0.0",
     "autoprefixer": "^10.4.20",
+    "cypress": "^15.3.0",
     "eslint": "^8.56.0",
     "eslint-config-next": "^13.5.6",
     "eslint-plugin-deprecation": "^2.0.0",
+    "mochawesome": "^7.1.4",
+    "mochawesome-merge": "^5.0.0",
+    "mochawesome-report-generator": "^6.3.0",
     "prettier": "^2.8.8",
     "prettier-plugin-tailwindcss": "^0.2.8",
     "prisma": "^5.18.0",
-    "typescript": "^5.5.4"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "ct3aMetadata": {
     "initVersion": "7.17.0"
