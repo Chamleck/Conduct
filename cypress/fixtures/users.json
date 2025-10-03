@@ -1,0 +1,21 @@
+{
+  "validUser": {
+    "email": "test@mail.com",
+    "username": "Test",
+    "password": "11111111"
+  },
+  "invalidUsers": [
+    {
+      "description": "Пароль меньше 8 символов",
+      "email": "shortpass@mail.com",
+      "username": "ShortPassUser",
+      "password": "1234567"
+    },
+    {
+      "description": "Некорректный email",
+      "email": "bademail",
+      "username": "BadEmailUser",
+      "password": "ValidPass123"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+/// <reference types="cypress" 
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["cypress", "node"],
+    "noEmit": true,
+    "module": "commonjs"
+  },
+  "include": [
+    "**/*.ts",
+    "fixtures/**/*.d.ts",
+    "fixtures/**/*.json"
+  ]
+}

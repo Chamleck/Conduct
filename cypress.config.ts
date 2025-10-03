@@ -4,7 +4,7 @@ const marge = require("mochawesome-report-generator");
 import fs from "fs";
 import path from "path";
 
-var myUniqueId: string | undefined;
+var myUniqueValue: string | undefined;
 
 export default defineConfig({
   e2e: {
@@ -23,12 +23,30 @@ export default defineConfig({
     setupNodeEvents(on, config) {
       // Tasks to store / retrieve unique ID
       on("task", {
-        setMyUniqueId: (val: string) => {
-          myUniqueId = val;
+        setMyUniqueValue: (val: string) => {
+          myUniqueValue = val;
           return null;
         },
-        getMyUniqueId: () => myUniqueId,
-        
+        getMyUniqueValue: () => myUniqueValue,
+        // Task to delete a user by email using Prisma
+        // Tipisation any - because Cypress tasks do not support generics
+        deleteUser: async (email: any) => {
+      const { PrismaClient } = require("@prisma/client");
+      const prisma = new PrismaClient();
+      try {
+        if (!email) return null; // protecting against accidental deletion of all users
+        await prisma.user.delete({ where: { email: String(email) } });
+        console.log(`User ${email} deleted`);
+      } catch (err: any) {
+        console.warn("deleteUser warning:", err?.message || err);
+      } finally {
+        await prisma.$disconnect();
+      }
+      return null;
+    },
+
+
+
         // Generating Mochawesome report after tests
         async generateMochawesomeReport() {
           const reportDir = "cypress/reports/mochawesome";
@@ -36,7 +54,7 @@ export default defineConfig({
             fs.mkdirSync(reportDir, { recursive: true });
           }
 
-          // Собираем все JSON отчёты
+          // collecting all json files
           const jsonFiles = fs
             .readdirSync(reportDir)
             .filter((file) => file.endsWith(".json"))
