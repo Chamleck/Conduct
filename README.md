@@ -41,6 +41,11 @@ This project serves as a template for test automation candidates writing end-to-
 | `npm install` | Install dependencies and set up the project |
 | `npm run dev` | Start the development server |
 | `npm run test:run` | Run end-to-end tests |
+| `npm run test:open` | Open Cypress Test Runner in interactive mode |
+| `npm run test:run:chrome` | Run tests in Chrome (desktop) |
+| `npm run test:run:firefox` | Run tests in Firefox (desktop) |
+| `npm run test:run:mobile:chrome` | Run tests in Chrome mobile emulation (375x667 viewport) |
+| `npm run test:run:mobile:safari` | Run tests with Safari Mobile emulation (Chromium + Safari userAgent). ⚠️ Note: Cypress does not support Safari natively — this script only simulates Safari Mobile. |
 
 ## 🧪 Test Structure
 
