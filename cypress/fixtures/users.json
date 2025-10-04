@@ -1,21 +1,34 @@
 {
-  "validUser": {
+  "validUsers": [
+    {
     "email": "test@mail.com",
     "username": "Test",
     "password": "11111111"
   },
+    {
+    "email": "myuser@mail.com",
+    "username": "Myuser",
+    "password": "11111111"
+  }
+],
   "invalidUsers": [
     {
-      "description": "Пароль меньше 8 символов",
+      "description": "Password too short",
       "email": "shortpass@mail.com",
       "username": "ShortPassUser",
       "password": "1234567"
     },
     {
-      "description": "Некорректный email",
+      "description": "Invalid email",
       "email": "bademail",
       "username": "BadEmailUser",
       "password": "ValidPass123"
+    },
+    {
+      "description": "Invalid email and short password",
+      "email": "bademail",
+      "username": "BadEmailUser",
+      "password": "V3123"
     }
   ]
 }

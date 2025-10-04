@@ -22,13 +22,13 @@ class SignUpPage extends BasePage {
         return cy.get('li').contains(error);
     }
 
-    fillSignUpForm(username: string, email: string, password: string): void {
+    fillSignUpForm(username: string, email: string, password: string): Cypress.Chainable<JQuery<HTMLElement>> {
         cy.log('**Filling sign up form**');
         this.getUsernameField().type(username);
         this.getEmailField().type(email);
         this.getPasswordField().type(password);
         cy.log('**Submitting sign up form**');
-        this.getSignUpButton().click();
+        return this.getSignUpButton().click();
     }
 
 }

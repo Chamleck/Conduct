@@ -11,17 +11,21 @@ class LoginPage extends BasePage {
     getPasswordField(): Cypress.Chainable<JQuery<HTMLElement>> {
         return cy.get('[data-testid="input-password"]');
     }
-    
-    getSignInButton(): Cypress.Chainable<JQuery<HTMLElement>> {
+
+    getSignInSubmitBtn(): Cypress.Chainable<JQuery<HTMLElement>> {
         return cy.get('[data-testid="btn-submit"]');
     }
 
-    submitLoginForm(email: string, password: string): void {
+    getErrorMessage(error: string): Cypress.Chainable<JQuery<HTMLElement>> {
+        return cy.get('li').contains(error);
+    }
+
+    submitLoginForm(email: string, password: string): Cypress.Chainable<JQuery<HTMLElement>> {
         cy.log('**Filling login form**');
         this.getEmailField().type(email);
         this.getPasswordField().type(password);
         cy.log('**Submitting login form**');
-        this.getSignInButton().click();
+        return this.getSignInSubmitBtn().click();
     }
 
 }

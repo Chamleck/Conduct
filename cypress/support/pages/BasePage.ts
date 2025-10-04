@@ -20,14 +20,26 @@ export default class BasePage {
         return cy.get('.user-pic');
     }
 
+    getNewArticleBtn(): Cypress.Chainable<JQuery<HTMLElement>> {
+        return cy.get('a:contains("New Article")');
+    }
+
     /**
      * Checking that header contains expected link text
      * @param username text to be checked in the header
      */
 
     getUserNameInHeader(username: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    return cy.get(`a:contains('${username}')`);
-}
+        return cy.get(`a:contains('${username}')`);
+    }
+
+    getSettigsBtn(): Cypress.Chainable<JQuery<HTMLElement>> {
+        return cy.get('a[href="/settings"]');
+    }
+
+    getSignInHeaderBtn(): Cypress.Chainable<JQuery<HTMLElement>> {
+        return cy.get('a[href="/login"]');
+    }
 
     /**
      * Checking that header contains expected link text

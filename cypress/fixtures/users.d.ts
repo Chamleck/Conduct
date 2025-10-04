@@ -10,8 +10,8 @@ declare module "./users.json" {
   }
 
   const value: {
-    validUser: User;
-    invalidUsers: InvalidUser[];
+    validUsers: [User, ...User[]];
+    invalidUsers: [InvalidUser, ...InvalidUser[]];
   };
 
   export default value;

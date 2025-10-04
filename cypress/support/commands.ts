@@ -8,7 +8,7 @@ declare namespace Cypress {
      * @param email - email of user
      * @param password - password of user
      * @returns object with user details and token
-     * @param sessionId - уникальный идентификатор сессии
+     * @param sessionId - unique id for session
      */
     loginTRPCUser(sessionId: string, email: string, password: string): Chainable<void>;
 
@@ -67,34 +67,37 @@ Cypress.Commands.add(
     cy.session(
       sessionId,
       () => {
-        // Формируем тело запроса для tRPC login (можно использовать auth.login, если есть endpoint)
+        // formating request body for tRPC
         const requestBody = {
           0: { json: { user: { email, password } } },
         };
 
         cy.request({
           method: "POST",
-          url: "/api/trpc/auth.login?batch=1", // предположим, что login endpoint auth.login
+          url: "/api/trpc/auth.login?batch=1", // tRPC endpoint for login
           body: requestBody,
           headers: { "content-type": "application/json" },
         }).then((res) => {
-          // Проверка статуса
+          // Status should be 200
           expect(res.status).to.eq(200);
 
-          // Извлекаем токен
+          // Extracting user data token from tRPC response
           const user = res.body?.[0]?.result?.data?.json?.user;
           if (!user?.token) throw new Error("Не удалось получить токен пользователя");
 
-          // Сохраняем токен в localStorage для UI
-          window.sessionStorage.setItem("accessToken", user.token);
+          // saving token to session storage to authorize in the app
+          window.sessionStorage.setItem("token", user.token);
 
-          // Можно сохранять email в task для удаления или дальнейшего использования
+          // email can be saved to file for later use in tests
           cy.task("setMyUniqueValue", user.email);
         });
       },
       {
-        cacheAcrossSpecs: true, // сохраняем сессию между тестами
+        cacheAcrossSpecs: true, // keep session across spec files
       }
     );
   }
 );
+
+
+
