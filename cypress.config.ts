@@ -31,19 +31,35 @@ export default defineConfig({
         // Task to delete a user by email using Prisma
         // Tipisation any - because Cypress tasks do not support generics
         deleteUser: async (email: any) => {
-      const { PrismaClient } = require("@prisma/client");
-      const prisma = new PrismaClient();
-      try {
-        if (!email) return null; // protecting against accidental deletion of all users
-        await prisma.user.delete({ where: { email: String(email) } });
-        console.log(`User ${email} deleted`);
-      } catch (err: any) {
-        console.warn("deleteUser warning:", err?.message || err);
-      } finally {
-        await prisma.$disconnect();
-      }
-      return null;
-    },
+          const { PrismaClient } = require("@prisma/client");
+          const prisma = new PrismaClient();
+          try {
+            if (!email) return null; // protecting against accidental deletion of all users
+            await prisma.user.delete({ where: { email: String(email) } });
+            console.log(`User ${email} deleted`);
+          } catch (err: any) {
+            console.warn("deleteUser warning:", err?.message || err);
+          } finally {
+            await prisma.$disconnect();
+          }
+          return null;
+        },
+        deleteArticle: async (title: any) => {
+          console.log("DB URL:", process.env.DATABASE_URL);
+          const { PrismaClient } = require("@prisma/client");
+          const prisma = new PrismaClient();
+          try {
+            if (!title) return { success: false, message: 'No title provided' }; // safety check
+            const result = await prisma.article.deleteMany({ where: {  title: { contains: String(title) } } });
+            console.log(`Article "${title}" deleted: ${result.count} records`);
+            return { success: true, deleted: result.count };
+          } catch (err: any) {
+            console.warn("deleteArticle warning:", err?.message || err);
+            return { success: false, message: err?.message || 'Unknown error' };
+          } finally {
+            await prisma.$disconnect();
+          }
+        },
 
 
 
