@@ -29,32 +29,62 @@ export default defineConfig({
         },
         getMyUniqueValue: () => myUniqueValue,
         // Task to delete a user by email using Prisma
+
         // Tipisation any - because Cypress tasks do not support generics
         deleteUser: async (email: any) => {
+          const path = process.env.DATABASE_URL || 'file:./database.sqlite';
+          console.log("🧭 Using DATABASE_URL:", path);
+
           const { PrismaClient } = require("@prisma/client");
-          const prisma = new PrismaClient();
+          const prisma = new PrismaClient({ datasources: { db: { url: path } } });
+
+          console.log("🔍 START deleteUser TASK");
+
           try {
-            if (!email) return null; // protecting against accidental deletion of all users
-            await prisma.user.delete({ where: { email: String(email) } });
-            console.log(`User ${email} deleted`);
+            if (!email) {
+              console.warn("⚠️ No email provided — skipping user deletion to avoid mass delete.");
+              return { success: false, message: "No email provided" };
+            }
+
+            console.log(`🧾 Checking if user with email "${email}" exists...`);
+            const user = await prisma.user.findUnique({ where: { email: String(email) } });
+
+            if (!user) {
+              console.log(`ℹ️ User "${email}" not found in DB — nothing to delete.`);
+              return { success: true, deleted: 0 };
+            }
+
+            console.log(`🗑️ Deleting user "${email}"...`);
+            const result = await prisma.user.delete({ where: { email: String(email) } });
+
+            console.log(`✅ User "${result.email}" successfully deleted.`);
+            return { success: true, deleted: 1 };
           } catch (err: any) {
-            console.warn("deleteUser warning:", err?.message || err);
+            console.warn("⚠️ deleteUser warning:", err?.message || err);
+            return { success: false, message: err?.message || "Unknown error" };
           } finally {
             await prisma.$disconnect();
+            console.log("🔚 END deleteUser TASK");
           }
-          return null;
         },
         deleteArticle: async (title: any) => {
-          console.log("DB URL:", process.env.DATABASE_URL);
+          const path = process.env.DATABASE_URL || 'file:./database.sqlite';
+          console.log("🧭 Using DATABASE_URL:", path);
+
           const { PrismaClient } = require("@prisma/client");
-          const prisma = new PrismaClient();
+          const prisma = new PrismaClient({ datasources: { db: { url: path } } });
+
           try {
-            if (!title) return { success: false, message: 'No title provided' }; // safety check
-            const result = await prisma.article.deleteMany({ where: {  title: { contains: String(title) } } });
-            console.log(`Article "${title}" deleted: ${result.count} records`);
+            if (!title) return { success: false, message: 'No title provided' };
+
+            const result = await prisma.article.deleteMany({
+              where: { title: { contains: String(title) } }, // without mode
+            });
+
+            console.log(`✅ Deleted ${result.count} article(s) matching "${title}"`);
             return { success: true, deleted: result.count };
           } catch (err: any) {
-            console.warn("deleteArticle warning:", err?.message || err);
+            console.warn("⚠️ deleteArticle warning:", err?.message || err);
             return { success: false, message: err?.message || 'Unknown error' };
           } finally {
             await prisma.$disconnect();
