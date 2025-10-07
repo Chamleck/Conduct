@@ -14,12 +14,13 @@
     "initialize:fresh": "npm run initialize:revert && npm run initialize",
     "postinstall": "npm run initialize && prisma generate && prisma db push",
     "test:initialize:database": "cp -n prisma/base.sqlite prisma/test.sqlite || :",
-    "test:run": "npm run test:initialize:database && cypress run --config-file cypress.config.ts && ts-node scripts/generateReport.ts",
+    "test:run": "npm run test:initialize:database && cypress run --config-file cypress.config.ts",
     "test:open": "cypress open --config-file cypress.config.ts",
-    "test:run:chrome": "npm run test:initialize:database && cypress run --browser chrome --config-file cypress.config.ts && ts-node scripts/generateReport.ts",
-    "test:run:firefox": "npm run test:initialize:database && cypress run --browser firefox --config-file cypress.config.ts && ts-node scripts/generateReport.ts",
-    "test:run:mobile:chrome": "npm run test:initialize:database && cypress run --browser chrome --config viewportWidth=375,viewportHeight=812 --config-file cypress.config.ts && ts-node scripts/generateReport.ts",
-    "test:run:mobile:safari": "npm run test:initialize:database && cypress run --browser chromium --config viewportWidth=375,viewportHeight=667,userAgent='Safari' --config-file cypress.config.ts && ts-node scripts/generateReport.ts"
+    "test:run:chrome": "npm run test:initialize:database && cypress run --browser chrome --config-file cypress.config.ts",
+    "test:run:firefox": "npm run test:initialize:database && cypress run --browser firefox --config-file cypress.config.ts",
+    "test:run:mobile:chrome": "npm run test:initialize:database && cypress run --browser chrome --config viewportWidth=375,viewportHeight=812 --config-file cypress.config.ts",
+    "test:run:mobile:safari": "npm run test:initialize:database && cypress run --browser chromium --config viewportWidth=375,viewportHeight=667,userAgent='Safari' --config-file cypress.config.ts",
+    "clean:reports": "rm -rf cypress/reports/mochawesome/*"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",

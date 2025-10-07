@@ -21,91 +21,61 @@ export default defineConfig({
     viewportHeight: 1080,
 
     setupNodeEvents(on, config) {
-      // Tasks to store / retrieve unique ID
+      // =========================
+      // CUSTOM CYPRESS TASKS
+      // =========================
       on("task", {
         setMyUniqueValue: (val: string) => {
           myUniqueValue = val;
           return null;
         },
         getMyUniqueValue: () => myUniqueValue,
-        // Task to delete a user by email using Prisma
 
-        // Tipisation any - because Cypress tasks do not support generics
-        // Cypress task to "seed" (create or ensure existence of) a user in the database.
-        // This is useful for E2E tests where we need a predictable user account
-        // to log in with, without relying on manual DB setup.
+        // Create user (seed) in DB using Prisma
         seedUser: async (userData: { email: string; username: string; password: string }) => {
-          // Determine which database to connect to.
-          // First, check if DATABASE_URL is defined (from .env).
-          // If not, default to local SQLite file.
-          const path = process.env.DATABASE_URL || 'file:./database.sqlite';
+          const path = process.env.DATABASE_URL || "file:./database.sqlite";
           console.log("🧭 Using DATABASE_URL:", path);
 
-          // Import Prisma client dynamically inside the task
-          // (to avoid issues with bundling and Cypress execution context).
           const { PrismaClient } = require("@prisma/client");
           const prisma = new PrismaClient({ datasources: { db: { url: path } } });
-
-          // Import bcrypt for password hashing.
-          const bcrypt = require('bcryptjs');
+          const bcrypt = require("bcryptjs");
 
           console.log("🌱 START seedUser TASK");
 
           try {
             const { email, username, password } = userData;
-
-            // Validate that required fields are provided.
-            // If any of them are missing, abort early and return an error object.
             if (!email || !username || !password) {
               console.warn("⚠️ Missing required fields (email, username, password).");
               return { success: false, message: "Missing required fields", user: null };
             }
 
-            // Step 1: Check if a user with this email already exists in the DB.
-            // We use Prisma's `findUnique` to query by unique email.
-            console.log(`🔍 Checking if user "${email}" already exists...`);
             let user = await prisma.user.findUnique({ where: { email } });
-
             if (user) {
-              // If found, we do NOT create a new one, just return the existing user.
               console.log(`ℹ️ User "${email}" already exists.`);
             } else {
-              // Step 2: If no user exists, create a new one.
-              // First, hash the plain-text password securely with bcrypt.
               console.log("🔒 Hashing password...");
               const hashedPassword = await bcrypt.hash(password, 10);
 
-              // Step 3: Create the user in the DB with email, username, and hashed password.
               console.log(`🧾 Creating user "${username}" with email "${email}"...`);
               user = await prisma.user.create({
-                data: {
-                  email,
-                  username,
-                  passwordHash: hashedPassword,
-                },
+                data: { email, username, passwordHash: hashedPassword },
               });
               console.log(`✅ User "${user.email}" successfully created.`);
             }
 
-            // Step 4: Always return a consistent response object:
-            // - success: true
-            // - user: the actual user object from DB (existing or newly created).
             return { success: true, user };
-
           } catch (err: any) {
-            // If anything fails during execution, log the error and return failure response.
             console.error("❌ seedUser error:", err?.message || err);
             return { success: false, message: err?.message || "Unknown error", user: null };
-
           } finally {
-            // Ensure Prisma disconnects from DB, avoiding connection leaks
-            // (important when Cypress runs multiple tests).
             await prisma.$disconnect();
             console.log("🔚 END seedUser TASK");
           }
         },
+
+        // Delete user by email
         deleteUser: async (email: any) => {
-          const path = process.env.DATABASE_URL || 'file:./database.sqlite';
+          const path = process.env.DATABASE_URL || "file:./database.sqlite";
           console.log("🧭 Using DATABASE_URL:", path);
 
           const { PrismaClient } = require("@prisma/client");
@@ -140,71 +110,189 @@ export default defineConfig({
             console.log("🔚 END deleteUser TASK");
           }
         },
+
+        // Delete article by title
         deleteArticle: async (title: any) => {
-          const path = process.env.DATABASE_URL || 'file:./database.sqlite';
+          const path = process.env.DATABASE_URL || "file:./database.sqlite";
           console.log("🧭 Using DATABASE_URL:", path);
 
           const { PrismaClient } = require("@prisma/client");
           const prisma = new PrismaClient({ datasources: { db: { url: path } } });
 
           try {
-            if (!title) return { success: false, message: 'No title provided' };
+            if (!title) return { success: false, message: "No title provided" };
 
             const result = await prisma.article.deleteMany({
-              where: { title: { contains: String(title) } }, // without mode
+              where: { title: { contains: String(title) } },
             });
 
             console.log(`✅ Deleted ${result.count} article(s) matching "${title}"`);
             return { success: true, deleted: result.count };
           } catch (err: any) {
             console.warn("⚠️ deleteArticle warning:", err?.message || err);
-            return { success: false, message: err?.message || 'Unknown error' };
+            return { success: false, message: err?.message || "Unknown error" };
           } finally {
             await prisma.$disconnect();
           }
         },
-
-
-
-        // Generating Mochawesome report after tests
-        async generateMochawesomeReport() {
-          const reportDir = "cypress/reports/mochawesome";
-          if (!fs.existsSync(reportDir)) {
-            fs.mkdirSync(reportDir, { recursive: true });
-          }
-
-          // collecting all json files
-          const jsonFiles = fs
-            .readdirSync(reportDir)
-            .filter((file) => file.endsWith(".json"))
-            .map((file) => path.join(reportDir, file));
-
-          if (jsonFiles.length === 0) return null;
-
-          // Merge reports
-          const mergedReport = await merge({ files: jsonFiles });
-
-          // Generate final report
-          await marge.create(mergedReport, {
-            reportDir,
-            inlineAssets: true,
-            saveJson: true,
-          });
-
-          return null;
-        },
       });
 
-      // Reporter configuration
+      // =========================
+      // AFTER:RUN EVENT LISTENER
+      // =========================
+      /**
+       * This event is triggered automatically after **all** Cypress spec files finish running.
+       * Its purpose is to:
+       * 1. Locate all individual Mochawesome JSON reports (created per spec file).
+       * 2. Merge them into a single combined JSON file using `mochawesome-merge`.
+       * 3. Generate one unified HTML report using `mochawesome-report-generator`.
+       */
+      // ============= EVENT LISTENERS =============
+      // =======================
+      // AFTER:RUN — MERGE & HTML
+      // =======================
+      on("after:run", async () => {
+        // Use absolute paths to avoid platform-specific glob issues
+        const reportDir = path.resolve("cypress/reports/mochawesome");
+        const mergedJsonName = "mochawesome.json"; // generator often expects this filename
+        const mergedJsonPath = path.join(reportDir, mergedJsonName);
+
+        console.log("📊 Starting report merge process...");
+
+        // 1) If report folder doesn't exist — skip
+        if (!fs.existsSync(reportDir)) {
+          console.log("⚠️ Report directory not found — skipping report generation.");
+          return;
+        }
+
+        // 2) Collect JSON files that are individual spec outputs.
+        //    Exclude any previously merged file or index.* files to avoid loops.
+        const jsonFiles = fs
+          .readdirSync(reportDir)
+          .filter(
+            (f) =>
+              f.endsWith(".json") &&
+              !f.includes(mergedJsonName) && // exclude merged file if exists
+              !f.toLowerCase().includes("index") // avoid index.json/html leftovers
+          )
+          .map((f) => path.join(reportDir, f));
+
+        if (jsonFiles.length === 0) {
+          console.log("⚠️ No JSON reports found — nothing to merge.");
+          return;
+        }
+
+        console.log(`🧩 Found ${jsonFiles.length} JSON report(s) to merge:`);
+        jsonFiles.forEach((p) => console.log("   -", p));
+
+        try {
+          // 3) Merge JSONs into one object (mochawesome-merge)
+          const mergedReport = await merge({ files: jsonFiles });
+
+          // Basic sanity check: mergedReport should contain results
+          if (!mergedReport || !mergedReport.results || mergedReport.results.length === 0) {
+            console.error("❌ Merged report structure is empty or invalid. Aborting HTML generation.");
+            return;
+          }
+
+          // 4) Write merged JSON to disk synchronously so generator can find it by path
+          fs.writeFileSync(mergedJsonPath, JSON.stringify(mergedReport, null, 2), "utf8");
+          console.log("🧾 Merged JSON saved:", mergedJsonPath);
+          console.log("   exists:", fs.existsSync(mergedJsonPath));
+
+          // 5) Try to generate HTML from the merged JSON file (preferred)
+          try {
+            await marge.create(mergedJsonPath, {
+              reportDir,
+              reportFilename: "index",
+              inlineAssets: true, // standalone HTML
+              saveJson: false,
+              charts: true,
+              reportTitle: "Cypress Test Report",
+              reportPageTitle: "E2E Results",
+              overwrite: true,
+            });
+
+            console.log("✅ HTML report successfully created:", path.join(reportDir, "index.html"));
+
+            // 6) Cleanup: remove the individual JSONs we just merged (keep merged file)
+            jsonFiles.forEach((file) => {
+              try { fs.unlinkSync(file); } catch (e) { /* ignore */ }
+            });
+            console.log("🧹 Individual JSON reports removed after successful merge.");
+
+            return; // success path done
+          } catch (primaryErr: any) {
+            // If generator failed for file-based path, log and try fallback
+            console.warn("⚠️ Primary HTML generation failed (file path). Trying fallback... ", primaryErr?.message || primaryErr);
+          }
+
+          // 7) FALLBACK: try to generate HTML by passing the merged object directly.
+          //    Some versions/edge-cases of the generator accept the object instead of path.
+          try {
+            await marge.create(mergedReport, {
+              reportDir,
+              reportFilename: "index",
+              inlineAssets: true,
+              saveJson: false,
+              charts: true,
+              reportTitle: "Cypress Test Report",
+              reportPageTitle: "E2E Results",
+              overwrite: true,
+            });
+
+            console.log("✅ HTML report created using fallback (object input):", path.join(reportDir, "index.html"));
+
+            // Clean up individual JSONs after success
+            jsonFiles.forEach((file) => {
+              try { fs.unlinkSync(file); } catch (e) { /* ignore */ }
+            });
+            console.log("🧹 Individual JSON reports removed after successful fallback merge.");
+
+            return;
+          } catch (fallbackErr: any) {
+            // 8) If fallback also fails – write detailed diagnostics for debugging.
+            console.error("❌ Fallback HTML generation also failed:", fallbackErr?.message || fallbackErr);
+
+            // Write a diagnostics file to help debugging
+            try {
+              const diagPath = path.join(reportDir, "marge-error-diagnostics.json");
+              const diag = {
+                timestamp: new Date().toISOString(),
+                jsonFiles,
+                mergedExists: fs.existsSync(mergedJsonPath),
+                mergedSize: fs.existsSync(mergedJsonPath) ? fs.statSync(mergedJsonPath).size : 0,
+                errorPrimary: String(fallbackErr),
+              };
+              fs.writeFileSync(diagPath, JSON.stringify(diag, null, 2), "utf8");
+              console.log("📝 Diagnostics written to:", diagPath);
+            } catch (diagErr) {
+              console.warn("⚠️ Failed writing diagnostics:", diagErr);
+            }
+
+            return;
+          }
+        } catch (err: any) {
+          console.error("❌ Error during merge step:", err?.message || err);
+          // nothing else to do
+          return;
+        }
+      });
+
+      
+      // =========================
+      // REPORTER CONFIGURATION
+      // =========================
       config.reporter = "mochawesome";
       config.reporterOptions = {
         reportDir: "cypress/reports/mochawesome",
-        overwrite: true,
-        html: true,
-        json: true,
+        overwrite: false, // ensures each spec produces a unique JSON
+        html: false,      // disables per-spec HTML to save time
+        json: true,       // only generate JSON, HTML is generated later
+        timestamp: "mm-dd-yyyy_HH-MM-ss",
       };
 
-      // Video and screenshot settings
+      // Enable video recording & screenshots
       config.video = true;
       config.screenshotOnRunFailure = true;
 

@@ -46,6 +46,7 @@ This project serves as a template for test automation candidates writing end-to-
 | `npm run test:run:firefox` | Run tests in Firefox (desktop) |
 | `npm run test:run:mobile:chrome` | Run tests in Chrome mobile emulation (375x667 viewport) |
 | `npm run test:run:mobile:safari` | Run tests with Safari Mobile emulation (Chromium + Safari userAgent). ⚠️ Note: Cypress does not support Safari natively — this script only simulates Safari Mobile. |
+| `npm run clean:reports` | Delete all test reports from `cypress/reports/mochawesome/` directory |
 
 ## 🧪 Test Structure
 
