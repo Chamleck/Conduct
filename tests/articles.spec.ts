@@ -12,28 +12,54 @@ import {
 } from '../cypress/support/pages';
 
 describe('🧾 E2E Articles CRUD Flow', () => {
-    const sessionId = 'validUserSession';
+    const sessionId = 'articlesUserSession';
     const currentUser = users.validUsers[1]!;
 
+    before(() => {
+        cy.log('🧱 [Setup] Seeding user before Article CRUD tests...');
+
+        // Сначала сидим пользователя
+        cy.task('seedUser', currentUser).then((result) => {
+            cy.log(`✅ [DB] User seeded: ${currentUser.email}`);
+            cy.log(`🧩 Seed result: ${JSON.stringify(result)}`);
+
+            // После успешного сида — логинимся
+            cy.log('🔐 [Auth] Logging in seeded user...');
+            cy.loginTRPCUser(sessionId, currentUser.email, currentUser.password);
+        });
+    });
+
     beforeEach(() => {
-        cy.log('🔐 Logging in user before each test...');
+        cy.log('♻️ [Pre-test] Restoring session before each test...');
         cy.loginTRPCUser(sessionId, currentUser.email, currentUser.password);
     });
 
     after(function () {
+        cy.log('🧹 [Cleanup] Starting cleanup after all Article CRUD tests...');
+
         const lastTest = this.test?.parent?.tests?.slice(-1)[0];
-        cy.log('🧹 Performing final cleanup...');
 
         if (lastTest && lastTest.state === 'failed') {
-            cy.task('deleteArticle', article.title);
-            cy.log('⚠️ Last test failed — removing article from DB...');
+            cy.log('⚠️ [Cleanup] Last test failed — removing article from DB...');
+            cy.task('deleteArticle', article.title).then((result) => {
+                cy.log(`🗑️ [DB] Deleted article: "${article.title}"`);
+                cy.log(`🧩 Delete result: ${JSON.stringify(result)}`);
+            });
         } else {
-            cy.log('✅ All tests passed — cleanup skipped.');
+            cy.log('✅ [Cleanup] All tests passed — skipping article deletion.');
         }
+
+        cy.task('deleteUser', currentUser.email).then((result) => {
+            cy.log(`🗑️ [DB] User deleted: ${currentUser.email}`);
+            cy.log(`🧩 Delete result: ${JSON.stringify(result)}`);
+        });
 
         cy.clearCookies();
         cy.clearLocalStorage();
+        Cypress.session.clearAllSavedSessions();
+        cy.log('🧽 [Cleanup] Cookies and local storage cleared.');
     });
+
 
     it('📝 Creates an article and verifies its display', () => {
         cy.intercept('POST', '/api/trpc/articles.create*').as('createArticle');

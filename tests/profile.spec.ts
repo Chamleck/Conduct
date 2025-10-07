@@ -8,20 +8,37 @@ import {
 } from '../cypress/support/pages';
 
 describe('E2E: Profile Editing Flow', () => {
-
-    const sessionId = 'validUserSession';
+    const sessionId = 'profileUserSession';
     const currentUser = users.validUsers[1]!;
 
     before(() => {
         cy.log('🔐 Logging in before Profile Edit tests...');
-        cy.loginTRPCUser(sessionId, currentUser.email, currentUser.password);
+
+        // First, seed the user
+        cy.task('seedUser', currentUser).then((result) => {
+            cy.log(`✅ User seeded: ${currentUser.email}`);
+            cy.log(`🧩 Seed result: ${JSON.stringify(result)}`);
+
+            // Then log in
+            cy.loginTRPCUser(sessionId, currentUser.email, currentUser.password);
+        });
     });
 
     after(() => {
         cy.log('🧹 Cleaning up: clearing cookies and local storage');
+
+        // Then delete the user, after clearing cookies and local storage
+        cy.task('deleteUser', currentUser.email).then((result) => {
+            cy.log(`🗑️ User deleted: ${currentUser.email}`);
+            cy.log(`🧩 Delete result: ${JSON.stringify(result)}`);
+        });
+
+        Cypress.session.clearAllSavedSessions();
         cy.clearCookies();
         cy.clearLocalStorage();
+        cy.log('🧽 [Cleanup] Cookies and local storage cleared.');
     });
+
 
     it('❌ Should display validation errors when editing profile with invalid email and password', () => {
 

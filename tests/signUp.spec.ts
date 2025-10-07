@@ -9,6 +9,7 @@ describe('🔐 E2E Registration & Login Flow', () => {
         cy.task('deleteUser', users.validUsers[0]!.email);
         cy.log(`🗑️ Deleted test user: ${users.validUsers[0]!.email}`);
 
+        Cypress.session.clearAllSavedSessions();
         cy.clearCookies();
         cy.clearLocalStorage();
         cy.log('✅ Cookies and local storage cleared.');
