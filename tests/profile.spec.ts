@@ -15,11 +15,12 @@ describe('E2E: Profile Editing Flow', () => {
         cy.log('🔐 Logging in before Profile Edit tests...');
 
         // First, seed the user
-        cy.task('seedUser', currentUser).then((result) => {
+        return cy.task('seedUser', currentUser).then((result) => {
             cy.log(`✅ User seeded: ${currentUser.email}`);
             cy.log(`🧩 Seed result: ${JSON.stringify(result)}`);
 
             // Then log in
+            cy.log('🔐 [Auth] Logging in seeded user...');
             cy.loginTRPCUser(sessionId, currentUser.email, currentUser.password);
         });
     });
@@ -28,15 +29,15 @@ describe('E2E: Profile Editing Flow', () => {
         cy.log('🧹 Cleaning up: clearing cookies and local storage');
 
         // Then delete the user, after clearing cookies and local storage
-        cy.task('deleteUser', currentUser.email).then((result) => {
+        return cy.task('deleteUser', currentUser.email).then((result) => {
             cy.log(`🗑️ User deleted: ${currentUser.email}`);
             cy.log(`🧩 Delete result: ${JSON.stringify(result)}`);
-        });
 
-        Cypress.session.clearAllSavedSessions();
-        cy.clearCookies();
-        cy.clearLocalStorage();
-        cy.log('🧽 [Cleanup] Cookies and local storage cleared.');
+            Cypress.session.clearAllSavedSessions();
+            cy.clearCookies();
+            cy.clearLocalStorage();
+            cy.log('🧽 [Cleanup] Cookies and local storage cleared.');
+        });
     });
 
 

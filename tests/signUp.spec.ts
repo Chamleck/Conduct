@@ -6,13 +6,17 @@ describe('🔐 E2E Registration & Login Flow', () => {
 
     after(() => {
         cy.log('🧹 Performing cleanup...');
-        cy.task('deleteUser', users.validUsers[0]!.email);
-        cy.log(`🗑️ Deleted test user: ${users.validUsers[0]!.email}`);
 
-        Cypress.session.clearAllSavedSessions();
-        cy.clearCookies();
-        cy.clearLocalStorage();
-        cy.log('✅ Cookies and local storage cleared.');
+        // Return task so Cypress waits for it
+        return cy.task('deleteUser', users.validUsers[0]!.email).then((result) => {
+            cy.log(`🗑️ Deleted test user: ${users.validUsers[0]!.email}`);
+            cy.log(`🧩 Delete result: ${JSON.stringify(result)}`);
+
+            Cypress.session.clearAllSavedSessions();
+            cy.clearCookies();
+            cy.clearLocalStorage();
+            cy.log('✅ Cookies and local storage cleared.');
+        });
     });
 
     it('🆕 Registers a user with valid data', () => {

@@ -18,12 +18,12 @@ describe('🧾 E2E Articles CRUD Flow', () => {
     before(() => {
         cy.log('🧱 [Setup] Seeding user before Article CRUD tests...');
 
-        // Сначала сидим пользователя
-        cy.task('seedUser', currentUser).then((result) => {
+        // First, seed the user
+        return cy.task('seedUser', currentUser).then((result) => {
             cy.log(`✅ [DB] User seeded: ${currentUser.email}`);
             cy.log(`🧩 Seed result: ${JSON.stringify(result)}`);
 
-            // После успешного сида — логинимся
+            // After seeding, log in
             cy.log('🔐 [Auth] Logging in seeded user...');
             cy.loginTRPCUser(sessionId, currentUser.email, currentUser.password);
         });
@@ -41,7 +41,7 @@ describe('🧾 E2E Articles CRUD Flow', () => {
 
         if (lastTest && lastTest.state === 'failed') {
             cy.log('⚠️ [Cleanup] Last test failed — removing article from DB...');
-            cy.task('deleteArticle', article.title).then((result) => {
+            return cy.task('deleteArticle', article.title).then((result) => {
                 cy.log(`🗑️ [DB] Deleted article: "${article.title}"`);
                 cy.log(`🧩 Delete result: ${JSON.stringify(result)}`);
             });
@@ -49,15 +49,15 @@ describe('🧾 E2E Articles CRUD Flow', () => {
             cy.log('✅ [Cleanup] All tests passed — skipping article deletion.');
         }
 
-        cy.task('deleteUser', currentUser.email).then((result) => {
+        return cy.task('deleteUser', currentUser.email).then((result) => {
             cy.log(`🗑️ [DB] User deleted: ${currentUser.email}`);
             cy.log(`🧩 Delete result: ${JSON.stringify(result)}`);
-        });
 
-        cy.clearCookies();
-        cy.clearLocalStorage();
-        Cypress.session.clearAllSavedSessions();
-        cy.log('🧽 [Cleanup] Cookies and local storage cleared.');
+            cy.clearCookies();
+            cy.clearLocalStorage();
+            Cypress.session.clearAllSavedSessions();
+            cy.log('🧽 [Cleanup] Cookies and local storage cleared.');
+        });
     });
 
 
