@@ -1,5 +1,4 @@
 
-# ![STRV Test Project for QA / Web Automation](./banner.jpg)
 
 > A test automation template built on top of the [RealWorld](https://github.com/gothinkster/realworld) example application using NextJS + tRPC + Prisma.
 
