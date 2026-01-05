@@ -1,6 +1,3 @@
-
-# ![STRV Test Project for QA / Web Automation](./banner.jpg)
-
 > A test automation template built on top of the [RealWorld](https://github.com/gothinkster/realworld) example application using NextJS + tRPC + Prisma.
 
 This project serves as a template for test automation candidates writing end-to-end tests using any automation framework of their choosing. The application is a fully functional Medium.com copy (Conduit) that provides real-world scenarios for testing.
